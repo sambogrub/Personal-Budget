@@ -1,0 +1,1 @@
+"""Module for the creation of the appropriate tables for the database"""

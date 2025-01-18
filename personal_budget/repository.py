@@ -5,4 +5,4 @@ from datetime import datetime
 from contextlib import contextmanager
 
 def init_database_tables():
-    
+    pass
