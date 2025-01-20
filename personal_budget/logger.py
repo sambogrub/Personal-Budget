@@ -33,7 +33,7 @@ def configure_logger(
         logger.addHandler(handler)
 
 
-def journal_logger() -> logging.Logger:
+def budget_logger() -> logging.Logger:
     """Returns the current instance of the logger"""
 
     return logging.getLogger(LOGGER_NAME)

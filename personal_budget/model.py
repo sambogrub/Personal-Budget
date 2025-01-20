@@ -3,7 +3,8 @@
 from datetime import datetime
 
 class Transaction:
-    def __init__(self, date: datetime,
+    def __init__(self, 
+                 date: datetime,
                  amount: float,
                  account: int=None, #account id number matching database account number
                  category: int=None, #category id number matcing database category number
@@ -13,8 +14,9 @@ class Transaction:
                  ):
         self._id = id
         self._date = date
-        self._type = type or self.determine_type()
         self._amount = amount
+        self._type = type or self.determine_type()
+    
         self._account = account
         self._category = category
         self._description = description
@@ -28,7 +30,7 @@ class Transaction:
         self._date = date_
 
     def determine_type(self):
-        return 'income' if self.amount >= 0 else 'expense'
+        return 'income' if self._amount >= 0 else 'expense'
     
     @property
     def type(self):
@@ -63,6 +65,15 @@ class Transaction:
         self._account = account_
 
     @property
+    def id(self):
+        return self._id
+    
+    @id.setter
+    def id(self, id_):
+        if self._id == None:
+            self._id = id_
+
+    @property
     def description(self):
         return self._description
 
@@ -80,7 +91,7 @@ class Account:
                  name: str,
                  type: str,
                  id: int=None,
-                 balance: int=0
+                 balance: float=0.0
                  ):
         self._id = id
         self._name = name
@@ -92,7 +103,7 @@ class Account:
         return self._name
     
     @name.setter
-    def name(self, name_):
+    def name(self, name_: str):
         self._name = name_
 
     @property
@@ -100,30 +111,53 @@ class Account:
         return self._type
     
     @type.setter
-    def type(self, type_):
+    def type(self, type_: str):
         self._type = type_
+
+    @property
+    def id(self):
+        return self._id
+    
+    @id.setter
+    def id(self, id_):
+        if self._id == None:
+            self._id = id_
 
     @property
     def balance(self):
         return self._balance
     
     @balance.setter
-    def balance(self, balance_):
-        self.balance = balance_
+    def balance(self, balance_: float):
+        self._balance = balance_
 
 
 class Category:
     def __init__(self,
-                 id: int,
-                 name: str,
-                 parent_id: int=0
-                 ):
+                name: str,
+                parent_id: int=None,
+                id: int=None
+                ):
         self._id = id
         self._name = name
         self._parent_id = parent_id
 
-    
+    @property
+    def name(self):
+        return self._name
 
+    @name.setter
+    def name(self, name_):
+        self._name = name_
+
+    @property
+    def id(self):
+        return self._id
+    
+    @id.setter
+    def id(self, id_):
+        if self._id == None:
+            self._id = id_
 
 class BudgetCategory:
     def __init__(self,
