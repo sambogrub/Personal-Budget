@@ -11,7 +11,7 @@ def test_transaction_initialization():
     assert transaction.account == 1
     assert transaction.category == 3
     assert transaction.description == 'van gas'
-    assert transaction._id == 40
+    assert transaction.id == 40
     assert transaction.type == 'expense'
 
 @pytest.mark.parametrize(
@@ -35,7 +35,7 @@ def test_account_initialization():
     account = Account('RBFCU', 'checking', 3, 10.75)
     assert account.name == 'RBFCU'
     assert account.type == 'checking'
-    assert account._id == 3
+    assert account.id == 3
     assert account.balance == 10.75
 
 @pytest.mark.parametrize(
@@ -70,3 +70,36 @@ def test_category_setters_and_getters(attribute, value):
     category = Category(2, 'food')
     setattr(category, attribute, value)
     assert getattr(category, attribute) == value
+
+
+def test_budgetcategory_initialization():
+    now = datetime.now()
+    bcategory = BudgetCategory('food', 'expense', now, now, 105.75, 34.50, 'monthly', True, 2, 1)
+    assert bcategory.name == 'food'
+    assert bcategory.type == 'expense'
+    assert bcategory.created_at == now
+    assert bcategory.updated_at == now
+    assert bcategory.budget_amount == 105.75
+    assert bcategory.remaining_amount == 34.50
+    assert bcategory.period == 'monthly'
+    assert bcategory.is_active == True
+    assert bcategory.parent_id == 2
+    assert bcategory.id == 1
+
+@pytest.mark.parametrize(
+    'attribute, value',
+    [
+        ('name', 'cell phone'),
+        ('type', 'income'),
+        ('updated_at', datetime(2025, 1, 19, 12, 30, 0)),
+        ('budget_amount', 45.76),
+        ('period', 'weekly'),
+        ('is_active', False),
+        ('parent_id', 4),
+        ('id', 3),
+    ]
+)
+def test_budgetcategory_setters_and_getters(attribute, value):
+    bcategory = BudgetCategory('food', 'expense', datetime.now(), datetime.now())
+    setattr(bcategory, attribute, value)
+    assert getattr(bcategory, attribute) == value
