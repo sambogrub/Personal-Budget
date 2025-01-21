@@ -169,7 +169,7 @@ class BudgetCategory:
                  remaining_amount: float=0,
                  period: str='monthly',
                  is_active: bool=True,
-                 parent_id: int=None,
+                 parent_id: int=None, #id that references a parent category
                  id: int=None
                  ):
         self._name = name

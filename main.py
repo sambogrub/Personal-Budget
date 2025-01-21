@@ -8,6 +8,7 @@ import personal_budget.logger as logger
 #-------Global variables--------
 DB_NAME = 'budget_data.DB'
 
+
 def db_connection(logger_: logger.logging.Logger) -> sqlite3.Connection:
     try:
         conn = sqlite3.connect(DB_NAME)
@@ -25,6 +26,7 @@ def personal_budget():
     log = logger.budget_logger()
 
     db_conn = db_connection(log)
-
     
+
+
      
