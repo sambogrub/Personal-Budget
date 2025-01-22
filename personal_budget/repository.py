@@ -9,9 +9,10 @@ import personal_budget.model as model
 import personal_budget.logger as logger
 
 
+
 class AccountRepo:
-    def __init__(self, db_cursor: sqlite3.Connection, logger_: logger.logging.Logger):
-        self._cursor = db_cursor
+    def __init__(self, controller, logger_: logger.logging.Logger):
+        self.controller = controller
         self._logger = logger_
 
     def create_account_entry(self, account: model.Account):
@@ -20,11 +21,11 @@ class AccountRepo:
         balance = account.balance
 
         save_query = """
-            INSERT INTO entries (name, type, balance)
+            INSERT INTO accounts (name, type, balance)
             VALUES (?, ?, ?)
             """
         
-        with self._cursor as cursor:
+        with self.controller.cursor_manager() as cursor:
             cursor.execute(save_query, (name, type, balance))
             self._logger.info(f"Account data saved for {name}, with type: {type} and balance: {balance}")
     
@@ -33,8 +34,8 @@ class AccountRepo:
             SELECT * FROM accounts
             """
         
-        with self._cursor as cursor:
-            cursor.execute(get_query, )
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query)
             accounts = cursor.fetchall()
             self._logger.info("All account retrieved")
             return accounts
@@ -45,8 +46,8 @@ class AccountRepo:
             WHERE id = ?
             """
         
-        with self._cursor as cursor:
-            cursor.execute(get_query, )
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query, (id, ))
             account = cursor.fetchone()
             self._logger.info(f"Account id: {id} retrieved")
             return account
@@ -63,7 +64,7 @@ class AccountRepo:
             WHERE id = ?
             """
         
-        with self._cursor as cursor:
+        with self.controller.cursor_manager() as cursor:
             cursor.execute(update_query, (name, type, balance, id_))
             self._logger.info(f"Account id: {id} updated with name: {name}, type: {type}, and balance: {balance}")
         
