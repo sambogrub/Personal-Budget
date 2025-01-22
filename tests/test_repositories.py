@@ -10,12 +10,12 @@ from personal_budget.repository_controller import RepositoryController
 
 @pytest.fixture
 def setup_db_and_connection():
-    conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(":memory:") #want to make sure the test DB is in memory and not an actual DB, Keeping tests consistent
     mock_logger = MagicMock()
 
-    initialize_db_tables(conn, mock_logger)
+    initialize_db_tables(conn, mock_logger) #using this function to make sure it is using the actual table schema
 
-    yield conn
+    yield conn #making sure the connection is passed to the test function
 
     conn.close()
 
@@ -191,3 +191,5 @@ def test_update_category(setup_db_and_connection):
     db_category = categoryrepo.get_category_by_id(2)
 
     assert db_category == (2, 'Takeout', 1)
+
+#--------------BudgetRepo Tests-----------------
