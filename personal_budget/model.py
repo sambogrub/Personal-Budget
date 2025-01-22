@@ -159,6 +159,14 @@ class Category:
         if self._id == None:
             self._id = id_
 
+    @property
+    def parent_id(self):
+        return self._parent_id
+    
+    @parent_id.setter
+    def parent_id(self, id_):
+        self._parent_id = id_
+
 class BudgetCategory:
     def __init__(self,
                  name: str,

@@ -70,9 +70,60 @@ class AccountRepo:
         
 
 class CategoryRepo:
-    def __init__(self, db_connection: sqlite3.Connection):
-        self.conn = db_connection
+    def __init__(self, controller, logger_: logger.logging.Logger):
+        self.controller = controller
+        self._logger = logger_
 
+    def create_category_entry(self, category: model.Category):
+        name = category.name
+        parent_id = category.parent_id
+
+        create_query = """
+            INSERT INTO categories (name, parent_id)
+            VALUES (?, ?)
+            """
+
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(create_query, (name, parent_id))
+            self._logger.info(f'Category {name}, with parent {parent_id} created')
+
+    def get_all_categories(self):
+        get_query = """
+            SELECT * FROM categories
+            """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query)
+            categories = cursor.fetchall()
+            self._logger.info('All categories retrieved')
+            return categories
+        
+    def get_category_by_id(self, id_):
+        get_query = """
+            SELECT * FROM categories
+            WHERE id = ?
+            """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query, (id_, ))
+            category = cursor.fetchone()
+            self._logger.info(f'Category {id_} retrieved')
+            return category
+
+    def update_category(self, category: model.Category):
+        id_ = category.id
+        name = category.name
+        parent_id = category.parent_id
+
+        update_query = """
+            UPDATE categories
+            SET name = ?, parent_id = ?
+            WHERE id = ?
+            """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(update_query, (name, parent_id, id_))
+            self._logger.info(f"Category {name} updated")
 
 class BudgetCategoryRepo:
     def __init__(self, db_connection: sqlite3.Connection):
