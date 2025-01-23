@@ -40,7 +40,7 @@ class AccountRepo:
             self._logger.info("All account retrieved")
             return accounts
         
-    def get_account_by_id(self, id):
+    def get_account_by_id(self, id) -> tuple:
         get_query = """
             SELECT * FROM accounts
             WHERE id = ?
@@ -87,7 +87,7 @@ class CategoryRepo:
             cursor.execute(create_query, (name, parent_id))
             self._logger.info(f'Category {name}, with parent {parent_id} created')
 
-    def get_all_categories(self):
+    def get_all_categories(self) -> list[tuple]:
         get_query = """
             SELECT * FROM categories
             """
@@ -98,7 +98,7 @@ class CategoryRepo:
             self._logger.info('All categories retrieved')
             return categories
         
-    def get_category_by_id(self, id_):
+    def get_category_by_id(self, id_) -> tuple:
         get_query = """
             SELECT * FROM categories
             WHERE id = ?
@@ -125,6 +125,7 @@ class CategoryRepo:
             cursor.execute(update_query, (name, parent_id, id_))
             self._logger.info(f"Category {name} updated")
 
+
 class BudgetCategoryRepo:
     def __init__(self, controller, logger_: logger.logging.Logger):
         self.controller = controller
@@ -148,12 +149,84 @@ class BudgetCategoryRepo:
             INSERT INTO budget(
             name, type, budget_amount, remaining_amount, period, created_at,
             update_at, is_active, parent_id, category_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """
 
         with self.controller.cursor_manager() as cursor:
             cursor.execute(create_query, values)
             self._logger.info(f'Budget Category {name} created')
 
+    def get_all_budgetcategories(self) -> list[tuple]:
+        get_query = """
+            SELECT * FROM budget
+            """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query)
+            bcategories = cursor.fetchall()
+            self._logger.info('Retrieved all budget category entries')
+            return bcategories
+        
+    def get_budgetcategory_by_id(self, id_) -> tuple:
+        get_query = """
+        SELECT * FROM budget
+        WHERE id = ?
+        """
+
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query, id_)
+            bcategory = cursor.fetchone()
+            self._logger.info(f'Retrieved budget category id {id_}')
+            return bcategory
+
+    def update_budgetcategory(self, budgetcategory: model.BudgetCategory):
+        name = budgetcategory.name
+        type_ = budgetcategory.type
+        budget_amount = budgetcategory.budget_amount
+        remaining_amount = budgetcategory.remaining_amount
+        period = budgetcategory.period
+        created_at = budgetcategory.created_at
+        update_at = budgetcategory.updated_at
+        is_active = budgetcategory.is_active
+        parent_id = budgetcategory.parent_id
+        category_id = budgetcategory.category_id
+        id_ = budgetcategory.id
+
+        columns_dict = {'name': name,
+                  'type': type_,
+                  'budget_amount': budget_amount,
+                  'remaining_amount': remaining_amount,
+                  'period': period,
+                  'created_at': created_at,
+                  'update_at': update_at,
+                  'is_active': is_active,
+                  'parent_id': parent_id,
+                  'category_id': category_id}
+
+        keys_str_list = [key + ' = ?' for key in columns_dict]
+        keys_str = ', '.join(keys_str_list)
+        values = tuple(columns_dict.values()) + (id_, )
+
+        update_query = f"""
+            UPDATE budget
+            SET {keys_str}
+            AT id = ?"""
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(update_query, values)
+            self._logger.info(f'Budget Category {id_} updated with {columns_dict}')
+
+    def get_budgetcategory_list(self) -> list[tuple]:
+        get_query = """
+            SELECT id, name
+            FROM budget
+            """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query)
+            bcategories = cursor.fetchall()
+            return bcategories
+        
 
 class TransactionRepo:
     def __init__(self, db_connection: sqlite3.Connection):
