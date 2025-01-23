@@ -126,8 +126,33 @@ class CategoryRepo:
             self._logger.info(f"Category {name} updated")
 
 class BudgetCategoryRepo:
-    def __init__(self, db_connection: sqlite3.Connection):
-        self.conn = db_connection
+    def __init__(self, controller, logger_: logger.logging.Logger):
+        self.controller = controller
+        self._logger = logger_
+
+    def create_budgetcategory_entry(self, budgetcategory: model.BudgetCategory):
+        name = budgetcategory.name
+        type_ = budgetcategory.type
+        budget_amount = budgetcategory.budget_amount
+        remaining_amount = budgetcategory.remaining_amount
+        period = budgetcategory.period
+        created_at = budgetcategory.created_at
+        update_at = budgetcategory.updated_at
+        is_active = budgetcategory.is_active
+        parent_id = budgetcategory.parent_id
+        category_id = budgetcategory.category_id
+
+        values = (name, type_, budget_amount, remaining_amount, period, created_at, update_at, is_active, parent_id, category_id)
+
+        create_query = """
+            INSERT INTO budget(
+            name, type, budget_amount, remaining_amount, period, created_at,
+            update_at, is_active, parent_id, category_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(create_query, values)
+            self._logger.info(f'Budget Category {name} created')
 
 
 class TransactionRepo:

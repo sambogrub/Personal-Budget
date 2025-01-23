@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime
 
 from personal_budget.model import Transaction, Account, Category, BudgetCategory
+from personal_budget.config import DATETIME_STR_FORMAT
 
 def test_transaction_initialization():
     now = datetime.now()
@@ -74,7 +75,7 @@ def test_category_setters_and_getters(attribute, value):
 
 def test_budgetcategory_initialization():
     now = datetime.now()
-    bcategory = BudgetCategory('food', 'expense', now, now, 105.75, 34.50, 'monthly', True, 2, 1)
+    bcategory = BudgetCategory('food', 'expense', now, now, 105.75, 34.50, 'monthly', True, 2, 1, 1)
     assert bcategory.name == 'food'
     assert bcategory.type == 'expense'
     assert bcategory.created_at == now
@@ -84,7 +85,18 @@ def test_budgetcategory_initialization():
     assert bcategory.period == 'monthly'
     assert bcategory.is_active == True
     assert bcategory.parent_id == 2
+    assert bcategory.category_id == 1
     assert bcategory.id == 1
+
+def test_budgetcategory_datetime_params_to_str():
+    now = datetime.now()
+    bcategory = BudgetCategory('food', 'expense', now, now)
+    now_str = now.strftime(DATETIME_STR_FORMAT)
+    test_created_at_str = bcategory.get_created_at_str()
+    test_updated_at_str = bcategory.get_updated_at_str()
+
+    assert now_str == test_created_at_str
+    assert now_str == test_updated_at_str
 
 @pytest.mark.parametrize(
     'attribute, value',

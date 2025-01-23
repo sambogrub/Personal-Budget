@@ -2,6 +2,8 @@
 
 from datetime import datetime
 
+from personal_budget.config import DATETIME_STR_FORMAT
+
 class Transaction:
     def __init__(self, 
                  date: datetime,
@@ -178,11 +180,13 @@ class BudgetCategory:
                  period: str='monthly',
                  is_active: bool=True,
                  parent_id: int=None, #id that references a parent category
+                 category_id: int=None,
                  id: int=None
                  ):
         self._name = name
         self._type = type
         self._parent_id = parent_id
+        self._category_id = category_id
         self._id = id
         self._created_at = created_at
         self._updated_at = updated_at
@@ -211,6 +215,10 @@ class BudgetCategory:
     def created_at(self):
         return self._created_at
     
+    def get_created_at_str(self) -> str:
+        created_at_str = self._created_at.strftime(DATETIME_STR_FORMAT)
+        return created_at_str
+    
     @property
     def updated_at(self):
         return self._updated_at
@@ -218,6 +226,10 @@ class BudgetCategory:
     @updated_at.setter
     def updated_at(self, timestamp: datetime):
         self._updated_at = timestamp
+
+    def get_updated_at_str(self) -> str:
+        updated_at_str = self._updated_at.strftime(DATETIME_STR_FORMAT)
+        return updated_at_str
 
     @property
     def budget_amount(self):
@@ -254,6 +266,14 @@ class BudgetCategory:
     @parent_id.setter
     def parent_id(self, id_: int):
         self._parent_id = id_
+
+    @property
+    def category_id(self):
+        return self._category_id
+    
+    @category_id.setter
+    def category_id(self, id_: int):
+        self._category_id = id_
 
     @property
     def id(self):
