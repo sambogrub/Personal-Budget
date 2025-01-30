@@ -2,10 +2,11 @@ import sqlite3
 import pytest
 from unittest.mock import MagicMock
 from contextlib import contextmanager
+from datetime import datetime
 
 from personal_budget.table_schema import initialize_db_tables
-from personal_budget.repository import AccountRepo, CategoryRepo
-from personal_budget.model import Account, Category
+from personal_budget.repository import AccountRepo, CategoryRepo, BudgetCategoryRepo
+from personal_budget.model import Account, Category, BudgetCategory
 from personal_budget.repository_controller import RepositoryController
 
 @pytest.fixture
@@ -193,3 +194,140 @@ def test_update_category(setup_db_and_connection):
     assert db_category == (2, 'Takeout', 1)
 
 #--------------BudgetRepo Tests-----------------
+def test_create_budgetcategory_entry(setup_db_and_connection):
+    conn = setup_db_and_connection
+    mock_logger = MagicMock()
+
+    repo_controller = RepositoryController(conn, mock_logger)
+
+    budgetcategoryrepo = BudgetCategoryRepo(repo_controller, mock_logger)
+
+    now = datetime.now()
+    
+
+    budgetcateory = BudgetCategory('food', 'income', now, now, 100.0, 56.00, 'monthly', True, None, None, None)
+    now_str = budgetcateory.get_created_at_str()
+
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcateory)
+
+    with repo_controller.cursor_manager() as cursor:
+        cursor.execute('SELECT * FROM budget')
+        b_category = cursor.fetchone()
+        assert b_category == (1, 'food', 'income', 100.00, 56.00, 'monthly', now_str, now_str, True, None, None)
+
+def test_get_all_budget_categories(setup_db_and_connection):
+    conn = setup_db_and_connection
+    mock_logger = MagicMock()
+    repo_controller = RepositoryController(conn, mock_logger)
+    budgetcategoryrepo = BudgetCategoryRepo(repo_controller, mock_logger)
+
+    now = datetime.now()
+
+    budgetcategory1 = BudgetCategory('food', 'expense', now, now, 1000.0, 560.00, 'monthly', True, None, None, None)
+    budgetcategory2 = BudgetCategory('grocery', 'expense', now, now, 100.0, 56.00, 'monthly', True, 1, None, None)
+
+    now_str = budgetcategory1.get_created_at_str()
+
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory1)
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory2)
+
+    bcategories = budgetcategoryrepo.get_all_budgetcategories()
+
+    assert bcategories == [(1, 'food', 'expense', 1000.00, 560.00, 'monthly', now_str, now_str, True, None, None),
+                           (2, 'grocery', 'expense', 100.00, 56.00, 'monthly', now_str, now_str, True, 1, None)]
+
+def test_get_budgetcategory_by_id(setup_db_and_connection):
+    conn = setup_db_and_connection
+    mock_logger = MagicMock()
+
+    repo_controller = RepositoryController(conn, mock_logger)
+    now = datetime.now()
+    budgetcategoryrepo = BudgetCategoryRepo(repo_controller, mock_logger)
+
+    budgetcategory1 = BudgetCategory('food', 'expense', now, now, 1000.00, 560.00, 'monthly', True, None, None, None)
+    budgetcategory2 = BudgetCategory('grocery', 'expense', now, now, 100.00, 56.00, 'monthly', True, 1, None, None)
+    budgetcategory3 = BudgetCategory('gas', 'expense', now, now, 50.00, 50.00, 'monthly', True, None, None, None)
+    budgetcategory4 = BudgetCategory('Lacie income', 'income', now, now, 1200.0, 1200.00, 'monthly', True, None, None, None)
+
+    now_str = budgetcategory1.get_created_at_str()
+
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory1)
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory2)
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory3)
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory4)
+
+    db_budgetcategory = budgetcategoryrepo.get_budgetcategory_by_id(2)
+
+    assert db_budgetcategory == (2, 'grocery', 'expense', 100.00, 56.00, 'monthly', now_str, now_str, True, 1, None)
+
+def test_update_budgetcategory(setup_db_and_connection):
+    conn = setup_db_and_connection
+    mock_logger = MagicMock()
+
+    repo_controller = RepositoryController(conn, mock_logger)
+    budgetcategoryrepo = BudgetCategoryRepo(repo_controller, mock_logger)
+
+    now = datetime.now()
+
+    # Create an initial budget category entry
+    budgetcategory = BudgetCategory('food', 'expense', now, now, 500.00, 200.00, 'monthly', True, None, None, None)
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory)
+
+    # Retrieve the created entry to get the assigned ID
+    budgetcategory_from_db = budgetcategoryrepo.get_all_budgetcategories()
+    assert len(budgetcategory_from_db) == 1
+
+    budgetcategory.id = budgetcategory_from_db[0][0]  # Assign ID from DB
+
+    # Update budget category details
+    budgetcategory.name = 'groceries'
+    budgetcategory.type = 'expense'
+    budgetcategory.budget_amount = 600.00
+    budgetcategory.remaining_amount = 250.00
+    budgetcategory.period = 'weekly'
+    budgetcategory.is_active = False
+
+    # Perform the update
+    budgetcategoryrepo.update_budgetcategory(budgetcategory)
+
+    # Retrieve and assert the updated data
+    updated_category = budgetcategoryrepo.get_budgetcategory_by_id(budgetcategory.id)
+    assert updated_category == (
+        budgetcategory.id,
+        'groceries',
+        'expense',
+        600.00,
+        250.00,
+        'weekly',
+        budgetcategory.get_created_at_str(),
+        budgetcategory.get_updated_at_str(),
+        False,
+        None,
+        None
+        )
+    
+def test_get_budgetcategory_list(setup_db_and_connection):
+    conn = setup_db_and_connection
+    mock_logger = MagicMock()
+
+    repo_controller = RepositoryController(conn, mock_logger)
+    budgetcategoryrepo = BudgetCategoryRepo(repo_controller, mock_logger)
+
+    now = datetime.now()
+
+    # Create multiple budget category entries
+    budgetcategory1 = BudgetCategory('food', 'expense', now, now, 500.00, 200.00, 'monthly', True, None, None, None)
+    budgetcategory2 = BudgetCategory('rent', 'expense', now, now, 1000.00, 0.00, 'monthly', True, None, None, None)
+
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory1)
+    budgetcategoryrepo.create_budgetcategory_entry(budgetcategory2)
+    # Retrieve the list of budget categories
+
+    categories_list = budgetcategoryrepo.get_budgetcategory_list()
+    
+    # Assert expected values
+    assert len(categories_list) == 2
+    assert categories_list[0][1] == 'food'
+    assert categories_list[1][1] == 'rent'
+
+

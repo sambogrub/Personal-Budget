@@ -137,18 +137,18 @@ class BudgetCategoryRepo:
         budget_amount = budgetcategory.budget_amount
         remaining_amount = budgetcategory.remaining_amount
         period = budgetcategory.period
-        created_at = budgetcategory.created_at
-        update_at = budgetcategory.updated_at
+        created_at = budgetcategory.get_created_at_str()
+        updated_at = budgetcategory.get_updated_at_str()
         is_active = budgetcategory.is_active
         parent_id = budgetcategory.parent_id
         category_id = budgetcategory.category_id
 
-        values = (name, type_, budget_amount, remaining_amount, period, created_at, update_at, is_active, parent_id, category_id)
+        values = (name, type_, budget_amount, remaining_amount, period, created_at, updated_at, is_active, parent_id, category_id)
 
         create_query = """
             INSERT INTO budget(
             name, type, budget_amount, remaining_amount, period, created_at,
-            update_at, is_active, parent_id, category_id)
+            updated_at, is_active, parent_id, category_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
 
@@ -174,7 +174,7 @@ class BudgetCategoryRepo:
         """
 
         with self.controller.cursor_manager() as cursor:
-            cursor.execute(get_query, id_)
+            cursor.execute(get_query, (id_, ))
             bcategory = cursor.fetchone()
             self._logger.info(f'Retrieved budget category id {id_}')
             return bcategory
@@ -185,8 +185,8 @@ class BudgetCategoryRepo:
         budget_amount = budgetcategory.budget_amount
         remaining_amount = budgetcategory.remaining_amount
         period = budgetcategory.period
-        created_at = budgetcategory.created_at
-        update_at = budgetcategory.updated_at
+        created_at = budgetcategory.get_created_at_str()
+        updated_at = budgetcategory.get_updated_at_str()
         is_active = budgetcategory.is_active
         parent_id = budgetcategory.parent_id
         category_id = budgetcategory.category_id
@@ -198,7 +198,7 @@ class BudgetCategoryRepo:
                   'remaining_amount': remaining_amount,
                   'period': period,
                   'created_at': created_at,
-                  'update_at': update_at,
+                  'updated_at': updated_at,
                   'is_active': is_active,
                   'parent_id': parent_id,
                   'category_id': category_id}
@@ -210,7 +210,7 @@ class BudgetCategoryRepo:
         update_query = f"""
             UPDATE budget
             SET {keys_str}
-            AT id = ?"""
+            WHERE id = ?"""
         
         with self.controller.cursor_manager() as cursor:
             cursor.execute(update_query, values)
@@ -229,5 +229,9 @@ class BudgetCategoryRepo:
         
 
 class TransactionRepo:
-    def __init__(self, db_connection: sqlite3.Connection):
-        self.conn = db_connection
+    def __init__(self, controller, logger_: logger.logging.Logger):
+        self._controller = controller
+        self._logger = logger_
+
+    def create_transaction_entry(self, transaction: model.Transaction):
+        pass

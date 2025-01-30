@@ -243,6 +243,10 @@ class BudgetCategory:
     def remaining_amount(self):
         return self._remaining_amount
     
+    @remaining_amount.setter
+    def remaining_amount(self, amount):
+        self._remaining_amount = amount
+        
     @property
     def period(self):
         return self._period
