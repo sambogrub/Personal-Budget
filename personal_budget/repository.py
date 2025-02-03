@@ -254,18 +254,19 @@ class TransactionRepo:
             cursor.execute(create_query, values)
             self._logger.info(f'Transaction in category {category} with amount ${amount}')
 
-    def get_all_transactions(self):
+    def get_all_transactions(self, type) -> list[tuple]:
         get_query = """
                 SELECT * FROM transactions
+                WHERE type = ?
                 """
         
         with self.controller.cursor_manager() as cursor:
-            cursor.execute(get_query)
+            cursor.execute(get_query, (type, ))
             transactions = cursor.fetchall()
             self._logger.info('All transactions retrieved')
             return transactions
         
-    def get_transaction_by_category(self, category_):
+    def get_transaction_by_category(self, category_) -> list[tuple]:
         get_query = """
                 SELECT * FROM transactions
                 WHERE category_id = ?
@@ -277,7 +278,7 @@ class TransactionRepo:
             self._logger.info(f'Transacions from category {category_} retrieved')
             return transactions
 
-    def get_transaction_by_budgetcategory(self, budgetcategory_):
+    def get_transaction_by_budgetcategory(self, budgetcategory_) -> list[tuple]:
         get_query = """
                 SELECT * FROM transactions
                 WHERE budget_id = ?
@@ -289,5 +290,42 @@ class TransactionRepo:
             self._logger.info(f'Transacions from budget category {budgetcategory_} retrieved')
             return transactions
         
-    def get_transactions_by_date_range(self, start_date, end_date):
-        pass
+    def get_transactions_by_date_range(self, start_date, end_date, type) -> list[tuple]:
+        get_query = """
+                SELECT * FROM transactions
+                WHERE date BETWEEN ? AND ?
+                AND type = ?
+                """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query, (start_date, end_date, type))
+            transactions = cursor.fetchall()
+            self._logger.info(f'Transactions retrieved in date range: {start_date} - {end_date}')
+            return transactions
+
+    def get_transaction_by_account_id(self, account_id_, type) -> list[tuple]:
+        get_query = """
+                SELECT * FROM transactions
+                WHERE account_id = ?
+                AND type = ?
+                """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query, (account_id_, type))
+            transactions = cursor.fetchall()
+            self._logger.info(f'Transacions from budget category {account_id_} retrieved')
+            return transactions
+        
+    def get_transactions_by_amount_range(self, low_amount, high_amount, type) -> list[tuple]:
+        get_query = """
+                SELECT * FROM transactions
+                WHERE amount BETWEEN ? AND ?
+                AND type = ?
+                """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query, (low_amount, high_amount, type))
+            transactions = cursor.fetchall()
+            self._logger.info(f'Transactions retrieved in date range: {low_amount} - {high_amount}')
+            return transactions
+    

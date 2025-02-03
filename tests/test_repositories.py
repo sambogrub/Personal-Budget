@@ -336,7 +336,10 @@ def test_create_transaction_entry(setup_db_and_connection):
     """Test creating a transaction entry."""
     conn = setup_db_and_connection
     mock_logger = MagicMock()
-    transaction_repo = TransactionRepo(conn, mock_logger)
+
+    repo_controller = RepositoryController(conn, mock_logger)
+
+    transaction_repo = TransactionRepo(repo_controller, mock_logger)
     now = datetime.now()
     transaction = Transaction(
         date=now, amount=100.50, account=1, category=2, budgetcategory=3, description="Groceries", type="expense"
@@ -344,7 +347,7 @@ def test_create_transaction_entry(setup_db_and_connection):
 
     transaction_repo.create_transaction_entry(transaction)
 
-    transactions = transaction_repo.get_all_transactions()
+    transactions = transaction_repo.get_all_transactions('expense')
     assert len(transactions) == 1
     assert transactions[0][1] == transaction.get_date_str()
     assert transactions[0][2] == transaction.amount
@@ -358,7 +361,9 @@ def test_get_all_transactions(setup_db_and_connection):
     """Test retrieving all transactions."""
     conn = setup_db_and_connection
     mock_logger = MagicMock()
-    transaction_repo = TransactionRepo(conn, mock_logger)
+    repo_controller = RepositoryController(conn, mock_logger)
+
+    transaction_repo = TransactionRepo(repo_controller, mock_logger)
     now = datetime.now()
     transaction1 = Transaction(
         date=now, amount=50.00, account=1, category=2, budgetcategory=3, description="Gas", type="expense"
@@ -370,15 +375,17 @@ def test_get_all_transactions(setup_db_and_connection):
     transaction_repo.create_transaction_entry(transaction1)
     transaction_repo.create_transaction_entry(transaction2)
 
-    transactions = transaction_repo.get_all_transactions()
-    assert len(transactions) == 2
-    assert {transactions[0][2], transactions[1][2]} == {50.00, 200.00}
+    transactions = transaction_repo.get_all_transactions('income')
+    assert len(transactions) == 1
+    assert {transactions[0][2]} == {200.00}
 
 def test_get_transaction_by_category(setup_db_and_connection):
     """Test retrieving transactions by category."""
     conn = setup_db_and_connection
     mock_logger = MagicMock()
-    transaction_repo = TransactionRepo(conn, mock_logger)
+    repo_controller = RepositoryController(conn, mock_logger)
+
+    transaction_repo = TransactionRepo(repo_controller, mock_logger)
     now = datetime.now()
     transaction1 = Transaction(
         date=now, amount=75.00, account=1, category=2, budgetcategory=3, description="Dining", type="expense"
@@ -399,7 +406,9 @@ def test_get_transaction_by_budgetcategory(setup_db_and_connection):
     """Test retrieving transactions by budget category."""
     conn = setup_db_and_connection
     mock_logger = MagicMock()
-    transaction_repo = TransactionRepo(conn, mock_logger)
+    repo_controller = RepositoryController(conn, mock_logger)
+
+    transaction_repo = TransactionRepo(repo_controller, mock_logger)
     now = datetime.now()
     transaction1 = Transaction(
         date=now, amount=30.00, account=1, category=2, budgetcategory=3, description="Coffee", type="expense"
@@ -415,3 +424,80 @@ def test_get_transaction_by_budgetcategory(setup_db_and_connection):
     assert len(budget_transactions) == 1
     assert budget_transactions[0][2] == 30.00
     assert budget_transactions[0][6] == 3
+
+def test_get_transactions_by_date_range(setup_db_and_connection):
+    """Test retrieving transactions within a date range."""
+    conn = setup_db_and_connection
+    mock_logger = MagicMock()
+    repo_controller = RepositoryController(conn, mock_logger)
+
+    transaction_repo = TransactionRepo(repo_controller, mock_logger)
+    now = datetime.now()
+    earlier = now.replace(day=1)
+    later = now.replace(day=28)
+
+    transaction1 = Transaction(
+        date=earlier, amount=50.00, account=1, category=2, budgetcategory=3, description="Gas", type="expense"
+    )
+    transaction2 = Transaction(
+        date=later, amount=200.00, account=2, category=3, budgetcategory=4, description="Salary", type="income"
+    )
+
+    transaction_repo.create_transaction_entry(transaction1)
+    transaction_repo.create_transaction_entry(transaction2)
+
+    transactions = transaction_repo.get_transactions_by_date_range(earlier.strftime("%Y-%m-%d"), later.strftime("%Y-%m-%d"), "expense")
+    
+    assert len(transactions) == 1
+    assert transactions[0][2] == 50.00
+    assert transactions[0][4] == "expense"
+
+def test_get_transaction_by_account_id(setup_db_and_connection):
+    """Test retrieving transactions by account ID."""
+    conn = setup_db_and_connection
+    mock_logger = MagicMock()
+    repo_controller = RepositoryController(conn, mock_logger)
+
+    transaction_repo = TransactionRepo(repo_controller, mock_logger)
+    now = datetime.now()
+
+    transaction1 = Transaction(
+        date=now, amount=75.00, account=1, category=2, budgetcategory=3, description="Dining", type="expense"
+    )
+    transaction2 = Transaction(
+        date=now, amount=120.00, account=2, category=3, budgetcategory=4, description="Shopping", type="expense"
+    )
+
+    transaction_repo.create_transaction_entry(transaction1)
+    transaction_repo.create_transaction_entry(transaction2)
+
+    account_transactions = transaction_repo.get_transaction_by_account_id(1, "expense")
+    
+    assert len(account_transactions) == 1
+    assert account_transactions[0][2] == 75.00
+    assert account_transactions[0][3] == 1  # Account ID
+
+def test_get_transactions_by_amount_range(setup_db_and_connection):
+    """Test retrieving transactions within an amount range."""
+    conn = setup_db_and_connection
+    mock_logger = MagicMock()
+    repo_controller = RepositoryController(conn, mock_logger)
+
+    transaction_repo = TransactionRepo(repo_controller, mock_logger)
+    now = datetime.now()
+
+    transaction1 = Transaction(
+        date=now, amount=30.00, account=1, category=2, budgetcategory=3, description="Coffee", type="expense"
+    )
+    transaction2 = Transaction(
+        date=now, amount=200.00, account=1, category=3, budgetcategory=4, description="Books", type="expense"
+    )
+
+    transaction_repo.create_transaction_entry(transaction1)
+    transaction_repo.create_transaction_entry(transaction2)
+
+    transactions = transaction_repo.get_transactions_by_amount_range(20.00, 100.00, "expense")
+    
+    assert len(transactions) == 1
+    assert transactions[0][2] == 30.00
+    assert transactions[0][4] == "expense"
