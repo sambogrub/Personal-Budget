@@ -10,15 +10,16 @@ class Transaction:
                  amount: float,
                  account: int=None, #account id number matching database account number
                  category: int=None, #category id number matcing database category number
+                 budgetcategory: int=None,
                  description: str=None,
-                 id: int=None, #id number matching database id number
-                 type: str=None #income or expense
+                 type: str=None, #income or expense
+                 id_: int=None #id number matching database id number
                  ):
-        self._id = id
+        self._id = id_
         self._date = date
         self._amount = amount
         self._type = type or self.determine_type()
-    
+        self._budgetcategory = budgetcategory
         self._account = account
         self._category = category
         self._description = description
@@ -30,6 +31,9 @@ class Transaction:
     @date.setter
     def date(self, date_: datetime):
         self._date = date_
+
+    def get_date_str(self):
+        return self._date.strftime(DATETIME_STR_FORMAT)
 
     def determine_type(self):
         return 'income' if self._amount >= 0 else 'expense'
@@ -57,6 +61,14 @@ class Transaction:
     @category.setter
     def category(self, category_: int):
         self._category = category_
+
+    @property
+    def budgetcategory(self):
+        return self._budgetcategory
+    
+    @budgetcategory.setter
+    def budgetcategory(self, budgetcategory_: int):
+        self._budgetcategory = budgetcategory_
 
     @property
     def account(self):

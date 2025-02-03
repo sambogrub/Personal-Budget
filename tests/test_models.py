@@ -6,11 +6,12 @@ from personal_budget.config import DATETIME_STR_FORMAT
 
 def test_transaction_initialization():
     now = datetime.now()
-    transaction = Transaction(now, 32.48, 1, 3, 'van gas', 40, 'expense')
+    transaction = Transaction(now, 32.48, 1, 3, 2,'van gas', 'expense', 40)
     assert transaction.date == now
     assert transaction.amount == 32.48
     assert transaction.account == 1
     assert transaction.category == 3
+    assert transaction.budgetcategory == 2
     assert transaction.description == 'van gas'
     assert transaction.id == 40
     assert transaction.type == 'expense'

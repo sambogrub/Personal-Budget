@@ -230,8 +230,64 @@ class BudgetCategoryRepo:
 
 class TransactionRepo:
     def __init__(self, controller, logger_: logger.logging.Logger):
-        self._controller = controller
+        self.controller = controller
         self._logger = logger_
 
     def create_transaction_entry(self, transaction: model.Transaction):
+        date = transaction.get_date_str()
+        amount = transaction.amount
+        account = transaction.account
+        category = transaction.category
+        budgetcategory = transaction.budgetcategory
+        description = transaction.description
+        type = transaction.type
+
+        values = (date, amount, account, type, category, budgetcategory, description)
+
+        create_query = """
+                INSERT INTO transactions(
+                date, amount, account_id, type, category_id, budget_id, description)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """
+
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(create_query, values)
+            self._logger.info(f'Transaction in category {category} with amount ${amount}')
+
+    def get_all_transactions(self):
+        get_query = """
+                SELECT * FROM transactions
+                """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query)
+            transactions = cursor.fetchall()
+            self._logger.info('All transactions retrieved')
+            return transactions
+        
+    def get_transaction_by_category(self, category_):
+        get_query = """
+                SELECT * FROM transactions
+                WHERE category_id = ?
+                """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query, (category_, ))
+            transactions = cursor.fetchall()
+            self._logger.info(f'Transacions from category {category_} retrieved')
+            return transactions
+
+    def get_transaction_by_budgetcategory(self, budgetcategory_):
+        get_query = """
+                SELECT * FROM transactions
+                WHERE budget_id = ?
+                """
+        
+        with self.controller.cursor_manager() as cursor:
+            cursor.execute(get_query, (budgetcategory_, ))
+            transactions = cursor.fetchall()
+            self._logger.info(f'Transacions from budget category {budgetcategory_} retrieved')
+            return transactions
+        
+    def get_transactions_by_date_range(self, start_date, end_date):
         pass
